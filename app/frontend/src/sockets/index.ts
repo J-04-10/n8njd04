@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8080/events';
+const socketUrl = import.meta.env.VITE_SOCKET_URL || '/events';
 export const socket = io(socketUrl, { transports: ['websocket'] });
 
 socket.on('connect', () => {
