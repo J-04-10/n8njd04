@@ -1,0 +1,72 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ../app/backend
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/app
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: change-me
+      ALLOWED_ORIGINS: http://localhost:5173
+      N8N_BASE_URL: ${N8N_BASE_URL:-https://n8n.example.com}
+      N8N_TOKEN: ${N8N_TOKEN:-change-me}
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ../app/frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+      VITE_SOCKET_URL: http://localhost:8080/events
+    ports:
+      - "5173:5173"
+
+  wa-connector:
+    build:
+      context: ../app/wa-connector
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+      BACKEND_BASE_URL: http://backend:8080
+      WA_RATE_LIMIT_PER_MINUTE: ${WA_RATE_LIMIT_PER_MINUTE:-60}
+    depends_on:
+      - redis
+      - backend
+    ports:
+      - "3001:3001"
+
+  nginx:
+    image: nginx:alpine
+    depends_on:
+      - backend
+      - frontend
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+      # - "443:443"  # Provide certs and server block for TLS
+
+volumes:
+  pgdata:
