@@ -1,0 +1,114 @@
+openapi: 3.1.0
+info:
+  title: Hospital Maria Auxiliadora WhatsApp API
+  version: 0.1.0
+servers:
+  - url: /api
+paths:
+  /auth/login:
+    post:
+      summary: Login
+      responses:
+        '200': { description: OK }
+  /auth/me:
+    get:
+      summary: Get current user
+      responses:
+        '200': { description: OK }
+  /agents/presence:
+    get:
+      summary: Agents presence
+      responses:
+        '200': { description: OK }
+  /agents/assign:
+    post:
+      summary: Assign conversation to agent
+      responses:
+        '200': { description: OK }
+  /agents/transfer:
+    post:
+      summary: Transfer conversation
+      responses:
+        '200': { description: OK }
+  /conversations:
+    get:
+      summary: List conversations
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: mine
+          schema: { type: boolean }
+      responses:
+        '200': { description: OK }
+  /conversations/{id}/messages:
+    post:
+      summary: Send message to conversation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /conversations/{id}/labels:
+    post:
+      summary: Add labels
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /conversations/{id}/typify:
+    post:
+      summary: Typify conversation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /conversations/{id}/close:
+    post:
+      summary: Close conversation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /bot/incoming:
+    post:
+      summary: Incoming message from WA connector
+      responses:
+        '200': { description: OK }
+  /bot/action:
+    post:
+      summary: Trigger an n8n action
+      responses:
+        '200': { description: OK }
+  /crm/contacts/sync:
+    post:
+      summary: Sync contact with CRM
+      responses:
+        '200': { description: OK }
+  /crm/activities/sync:
+    post:
+      summary: Sync activity with CRM
+      responses:
+        '200': { description: OK }
+  /channels/{id}/qr:
+    get:
+      summary: Get QR for WA channel
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }

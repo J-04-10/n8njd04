@@ -1,0 +1,155 @@
+// Prisma schema for Hospital María Auxiliadora WhatsApp multi-agent panel
+// Datasource and generator
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SUPERVISOR
+  AGENT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String?
+  role      Role
+  status    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Agent     Agent?
+}
+
+model Agent {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  active    Boolean  @default(true)
+  skills    String[] @default([])
+}
+
+model Channel {
+  id            String   @id @default(cuid())
+  name          String
+  waNumber      String
+  sessionState  String?
+  lastQrAt      DateTime?
+  createdAt     DateTime @default(now())
+  conversations Conversation[]
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  phoneE164   String   @unique
+  name        String?
+  docNumber   String?
+  eps         String?
+  sede        String?
+  extras      Json?
+  createdAt   DateTime @default(now())
+  conversations Conversation[]
+  botSessions   BotSession[]
+}
+
+model Conversation {
+  id               String   @id @default(cuid())
+  channelId        String
+  contactId        String
+  assignedAgentId  String?
+  status           String
+  origin           String
+  openedAt         DateTime @default(now())
+  closedAt         DateTime?
+  closeReason      String?
+  closeTags        String[] @default([])
+  channel          Channel  @relation(fields: [channelId], references: [id])
+  contact          Contact  @relation(fields: [contactId], references: [id])
+  messages         Message[]
+  conversationLabels ConversationLabel[]
+  conversationTypifications ConversationTypification[]
+}
+
+model Message {
+  id              String   @id @default(cuid())
+  conversationId  String
+  direction       String
+  body            String?
+  mediaUrl        String?
+  meta            Json?
+  waMsgId         String?
+  createdAt       DateTime @default(now())
+  conversation    Conversation @relation(fields: [conversationId], references: [id])
+
+  @@index([conversationId, createdAt])
+}
+
+model Label {
+  id    String @id @default(cuid())
+  name  String @unique
+  color String
+  conversationLabels ConversationLabel[]
+}
+
+model ConversationLabel {
+  conversationId String
+  labelId        String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  label          Label        @relation(fields: [labelId], references: [id])
+
+  @@id([conversationId, labelId])
+}
+
+model Typification {
+  id             String @id @default(cuid())
+  name           String
+  category       String?
+  requiredFields Json?
+  conversationTypifications ConversationTypification[]
+}
+
+model ConversationTypification {
+  conversationId String
+  typificationId String
+  fields         Json?
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  typification   Typification @relation(fields: [typificationId], references: [id])
+
+  @@id([conversationId, typificationId])
+}
+
+model BotSession {
+  id         String   @id @default(cuid())
+  contactId  String
+  state      String
+  collected  Json?
+  lastStep   String?
+  updatedAt  DateTime @updatedAt
+  contact    Contact  @relation(fields: [contactId], references: [id])
+}
+
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  type        String
+  payload     Json
+  deliveredAt DateTime?
+  retries     Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  diff      Json?
+  createdAt DateTime @default(now())
+}
